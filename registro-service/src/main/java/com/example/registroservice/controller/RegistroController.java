@@ -1,7 +1,6 @@
 package com.example.registroservice.controller;
 
 import com.example.registroservice.client.ValidacionClient;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,18 +13,15 @@ public class RegistroController {
         this.validacionClient = validacionClient;
     }
 
-    @PostMapping
-    public ResponseEntity<String> registrar(@RequestParam String dni,
-                                            @RequestParam String correo) {
+    @GetMapping("/{nombre}/{dni}")
+    public String registrar(@PathVariable String nombre, @PathVariable String dni) {
 
-        // 1. Validar DNI llamando a VALIDACION-SERVICE
         String respuesta = validacionClient.validarDni(dni);
 
-        if (!respuesta.equals("OK")) {
-            return ResponseEntity.badRequest().body("DNI inválido: " + respuesta);
+        if (respuesta.contains("válido")) {
+            return "Usuario " + nombre + " registrado exitosamente.";
+        } else {
+            return "Error: " + respuesta;
         }
-
-        // 2. Registro exitoso
-        return ResponseEntity.ok("Registro exitoso para " + correo);
     }
 }
