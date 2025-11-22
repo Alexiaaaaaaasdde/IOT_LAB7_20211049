@@ -15,10 +15,21 @@ public class RegistroController {
         this.validacionClient = validacionClient;
     }
 
-    @PostMapping
-    public ResponseEntity<?> registrarUsuario(@RequestBody UsuarioDTO usuario) {
+    @GetMapping("/{nombre}/{dni}")
+    public String registrar(@PathVariable String nombre, @PathVariable String dni) {
 
-        // Validar DNI
+        String respuesta = validacionClient.validarDni(dni);
+
+        if (respuesta.contains("válido")) {
+            return "Usuario " + nombre + " registrado exitosamente.";
+        } else {
+            return "Error: " + respuesta;
+        }
+    }
+    @PostMapping
+    public ResponseEntity<String> registrarUsuario(@RequestBody UsuarioDTO usuario) {
+
+        // Validar DNI usando el microservicio de validación
         String respDni = validacionClient.validarDni(usuario.getDni());
         if (!respDni.contains("válido")) {
             return ResponseEntity.badRequest().body("El DNI no es válido");
@@ -30,6 +41,7 @@ public class RegistroController {
             return ResponseEntity.badRequest().body("Correo inválido");
         }
 
-        return ResponseEntity.ok("Usuario registrado exitosamente");
+        return ResponseEntity.ok("Usuario registrado exitosamente.");
     }
+
 }
