@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: validacion-service
+
+server:
+  port: 0  # Puerto aleatorio
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
