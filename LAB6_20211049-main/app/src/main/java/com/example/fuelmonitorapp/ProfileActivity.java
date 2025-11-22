@@ -8,6 +8,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -18,8 +20,6 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 public class ProfileActivity extends AppCompatActivity {
 
-    private static final int PICK_IMAGE = 200;
-
     private ImageView imgPerfil;
     private TextView txtNombre, txtCorreo;
     private Button btnCambiarFoto;
@@ -29,6 +29,14 @@ public class ProfileActivity extends AppCompatActivity {
     private CloudStorage cloudStorage;
 
     private String uid;
+
+    // Launcher para seleccionar imagen
+    private final ActivityResultLauncher<String> imagePicker =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+                if (uri != null) {
+                    subirImagen(uri);
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,28 +68,18 @@ public class ProfileActivity extends AppCompatActivity {
                         txtNombre.setText(doc.getString("nombre"));
                         txtCorreo.setText(doc.getString("correo"));
 
-                        String fotoUrl = doc.getString("foto");
-                        if (fotoUrl != null) {
-                            Glide.with(this).load(fotoUrl).into(imgPerfil);
+                        String foto = doc.getString("foto");
+                        if (foto != null && !foto.isEmpty()) {
+                            Glide.with(this).load(foto).into(imgPerfil);
                         }
                     }
-                });
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Error cargando perfil", Toast.LENGTH_SHORT).show());
     }
 
     private void seleccionarImagen() {
-        Intent intent = new Intent(Intent.ACTION_PICK);
-        intent.setType("image/*");
-        startActivityForResult(intent, PICK_IMAGE);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == PICK_IMAGE && resultCode == RESULT_OK && data != null) {
-            Uri imgUri = data.getData();
-            subirImagen(imgUri);
-        }
+        imagePicker.launch("image/*");
     }
 
     private void subirImagen(Uri uri) {
@@ -89,19 +87,17 @@ public class ProfileActivity extends AppCompatActivity {
             @Override
             public void onSuccess(String downloadUrl) {
 
-                // Guardar en Firestore
                 db.collection("usuarios")
                         .document(uid)
                         .update("foto", downloadUrl)
-                        .addOnSuccessListener(a -> {
-
-                            // Mostrar imagen
+                        .addOnSuccessListener(v -> {
                             Glide.with(ProfileActivity.this).load(downloadUrl).into(imgPerfil);
 
-                            // TOAST obligatorio
+                            // Mensaje obligatorio según el LAB
                             Toast.makeText(ProfileActivity.this,
                                     "Imagen subida: " + downloadUrl,
-                                    Toast.LENGTH_LONG).show();
+                                    Toast.LENGTH_LONG
+                            ).show();
                         });
             }
 
