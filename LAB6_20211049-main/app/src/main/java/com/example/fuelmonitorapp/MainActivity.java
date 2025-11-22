@@ -36,6 +36,9 @@ public class MainActivity extends AppCompatActivity {
                 selectedFragment = new RegistrosFragment();
             } else if (itemId == R.id.nav_resumen) {
                 selectedFragment = new ResumenFragment();
+            } else if (itemId == R.id.nav_perfil) {
+                startActivity(new Intent(MainActivity.this, ProfileActivity.class));
+                return true;
             } else if (itemId == R.id.nav_logout) {
                 AuthUI.getInstance()
                         .signOut(this)
@@ -55,5 +58,6 @@ public class MainActivity extends AppCompatActivity {
 
             return true;
         });
+
     }
 }
